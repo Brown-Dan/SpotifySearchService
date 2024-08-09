@@ -4,3 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+axum = "0.7.5"
+diesel = "2.2.2"
+dotenv = "0.15.0"
