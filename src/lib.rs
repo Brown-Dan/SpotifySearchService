@@ -23,7 +23,7 @@ pub fn insert_artist(artist: &Artist) {
         .values(artist)
         .returning(Artist::as_returning())
         .get_result(connection)
-        .expect("Error saving new post");
+        .expect("Error saving new artist");
 }
 
 pub fn insert_track(track: &Track) {
@@ -32,7 +32,7 @@ pub fn insert_track(track: &Track) {
         .values(track)
         .returning(Track::as_returning())
         .get_result(connection)
-        .expect("Error saving new post");
+        .expect("Error saving new track");
 }
 
 pub fn insert_album(album: &Album) {
@@ -41,7 +41,7 @@ pub fn insert_album(album: &Album) {
         .values(album)
         .returning(Album::as_returning())
         .get_result(connection)
-        .expect("Error saving new post");
+        .expect("Error saving new album");
 }
 
 pub fn insert_stream(stream: &Stream) {
@@ -50,5 +50,5 @@ pub fn insert_stream(stream: &Stream) {
         .values(stream)
         .returning(Stream::as_returning())
         .get_result(connection)
-        .expect("Error saving new post");
+        .expect("Error saving new stream");
 }
