@@ -2,6 +2,7 @@ use std::env;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool};
 use dotenv::dotenv;
 
 use crate::models::{Album, Artist, Stream, Track, Upload, UploadableStream};
@@ -10,24 +11,25 @@ use crate::schema::{albums, artists, streams, tracks, upload};
 pub mod schema;
 pub mod models;
 
-pub fn establish_database_connection() -> PgConnection {
+pub fn get_connection_pool() -> Pool<ConnectionManager<PgConnection>> {
     dotenv().ok();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+    let url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let manager = ConnectionManager::<PgConnection>::new(url);
+    Pool::builder()
+        .test_on_check_out(true)
+        .build(manager)
+        .expect("Could not build connection pool")
 }
 
-pub fn get_upload_by_id(id: uuid::Uuid) -> Option<Upload> {
-    let connection = &mut establish_database_connection();
 
+pub fn get_upload_by_id(id: uuid::Uuid, connection: &mut PgConnection) -> Option<Upload> {
     return upload::table
         .filter(upload::upload_id.eq(id))
         .select(upload::all_columns)
         .first::<Upload>(connection).ok();
 }
 
-pub fn insert_upload(upload: Upload) {
-    let connection = &mut establish_database_connection();
+pub fn insert_upload(upload: Upload, connection: &mut PgConnection) {
     diesel::insert_into(upload::table)
         .values(upload)
         .returning(Upload::as_returning())
@@ -35,9 +37,11 @@ pub fn insert_upload(upload: Upload) {
         .expect("Error saving new artist");
 }
 
-pub fn insert_stream_data(stream: &UploadableStream) {
-    let connection = &mut establish_database_connection();
+pub fn insert_stream_data(streams: &Vec<UploadableStream>, connection: &mut PgConnection) {
+    streams.iter().for_each(|stream| { insert_uploadable_stream(stream, connection) })
+}
 
+fn insert_uploadable_stream(stream: &UploadableStream, connection: &mut PgConnection) {
     let artist = artists::table
         .filter(artists::uri.eq(&stream.track.artist.uri))
         .select(artists::all_columns)
