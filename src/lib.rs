@@ -6,7 +6,7 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use dotenv::dotenv;
 
 use crate::models::{Album, Artist, Stream, Track, Upload, UploadableStream};
-use crate::schema::{albums, artists, streams, tracks, upload};
+use crate::schema::{albums, artists, streams, tracks, uploads};
 
 pub mod schema;
 pub mod models;
@@ -23,14 +23,14 @@ pub fn get_connection_pool() -> Pool<ConnectionManager<PgConnection>> {
 
 
 pub fn get_upload_by_id(id: uuid::Uuid, connection: &mut PgConnection) -> Option<Upload> {
-    return upload::table
-        .filter(upload::upload_id.eq(id))
-        .select(upload::all_columns)
+    return uploads::table
+        .filter(uploads::upload_id.eq(id))
+        .select(uploads::all_columns)
         .first::<Upload>(connection).ok();
 }
 
 pub fn insert_upload(upload: Upload, connection: &mut PgConnection) {
-    diesel::insert_into(upload::table)
+    diesel::insert_into(uploads::table)
         .values(upload)
         .returning(Upload::as_returning())
         .get_result(connection)

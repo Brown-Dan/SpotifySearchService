@@ -1,6 +1,21 @@
+use std::fmt;
+
 use actix_web::HttpResponse;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum UploadStatus {
+    Processing,
+    Failed,
+    Completed,
+}
+
+impl fmt::Display for UploadStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum ErrorKey {
@@ -113,7 +128,7 @@ pub struct Track {
 }
 
 #[derive(Queryable, Selectable, Deserialize, Serialize, Debug)]
-#[diesel(table_name = crate::schema::upload)]
+#[diesel(table_name = crate::schema::uploads)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[derive(Insertable)]
 pub struct Upload {
@@ -122,4 +137,6 @@ pub struct Upload {
     pub first_stream: Option<chrono::NaiveDateTime>,
     pub last_stream: Option<chrono::NaiveDateTime>,
     pub number_of_streams: Option<i32>,
+    pub status: Option<String>,
+    pub message: Option<String>,
 }
